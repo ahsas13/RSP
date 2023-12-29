@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<h1>Информация о книгах</h1>
+
+<!-- Форма для добавления книги -->
+<h2>Добавить книгу</h2>
+<form id="addBookForm">
+    <label for="title">Название:</label>
+    <input type="text" id="title" name="title" required>
+
+    <label for="author">Автор :</label>
+    <input type="text" id="author" name="author" required>
+
+    <!-- Вызываем функцию addBook() при нажатии кнопки -->
+    <button type="button" onclick="addBook()">Добавить</button>
+</form>
+
+<hr>
+
+<!-- Список книг -->
+<h2>Список книг</h2>
+<!-- Место, где будут отображаться книги -->
+<ul id="booksList"></ul>
+
+<script>
+    // Функция для добавления книги
+    function addBook() {
+        // Получаем значения из полей ввода
+        var title = document.getElementById("title").value;
+        var author = document.getElementById("author").value;
+
+        // Создаем объект данных книги
+        var bookData = { "Название": title, "Автор": author };
+
+        // Отправляем POST-запрос на сервер
+        fetch("http://localhost:8080/books", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(bookData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // Обновляем список книг после добавления
+                getBooks();
+            })
+            .catch(error => console.error("Error:", error));
+    }
+
+    // Функция для удаления книги
+    function deleteBook(id) {
+        // Отправляем DELETE-запрос на сервер
+        fetch(`http://localhost:8080/books/${id}`, {
+            method: "DELETE"
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // Обновляем список книг после удаления
+                getBooks();
+            })
+            .catch(error => console.error("Error:", error));
+    }
+
+    // Функция для получения списка книг
+    function getBooks() {
+        // Отправляем GET-запрос на сервер
+        fetch("http://localhost:8080/books")
+            .then(response => response.json())
+            .then(data => {
+                // Отображаем список книг на странице
+                var booksList = document.getElementById("booksList");
+                booksList.innerHTML = ""; // Очищаем текущий список
+
+                // Проходим по каждой книге в полученных данных и добавляем её в список
+                data.forEach((book, index) => {
+                    var listItem = document.createElement("li");
+                    listItem.textContent = book;
+
+                    // Создаем кнопку "Delete" для каждой книги
+                    var deleteButton = document.createElement("button");
+                    deleteButton.textContent = "Удалить";
+                    // При нажатии кнопки вызываем функцию для удаления книги
+                    deleteButton.onclick = function() {
+                        deleteBook(index);
+                    };
+
+                    // Добавляем кнопку "Delete" к каждой книге
+                    listItem.appendChild(deleteButton);
+
+                    // Добавляем книгу в список
+                    booksList.appendChild(listItem);
+                });
+            })
+            .catch(error => console.error("Error:", error));
+    }
+
+    // Вызываем функцию для получения списка книг при загрузке страницы
+    getBooks();
+</script>
+</body>
+</html>
